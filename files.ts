@@ -1,4 +1,26 @@
-{
+import { FileSystemTree } from '@webcontainer/api';
+
+export const files: FileSystemTree = {
+	'server.ts': {
+		file: {
+			contents: `
+      import { Hono } from 'hono';
+      
+      const app = new Hono();
+      
+      app.get('/', (c) => c.text('Welcone to a WebContainers app!'));
+      
+      export default {
+        port: 4000,
+        fetch: app.fetch,
+      };
+      `,
+		},
+	},
+	'package.json': {
+		file: {
+			contents: `
+      {
   "name": "webcontainers-express-app",
   "private": true,
   "version": "0.0.0",
@@ -15,15 +37,15 @@
     "concurrently": "^9.1.2"
   },
   "dependencies": {
-    "@hono/node-server": "^1.13.8",
     "@oskartdragon/config": "^0.1.3",
-    "@types/fs-extra": "^11.0.4",
     "@webcontainer/api": "^1.5.1-internal.8",
     "eslint": "^9.19.0",
-    "fs-extra": "^11.3.0",
     "hono": "^4.7.0",
-    "prettier": "^3.4.2",
-    "tiny-invariant": "^1.3.3"
+    "prettier": "^3.4.2"
   },
   "prettier": "@oskartdragon/config/prettier"
 }
+`,
+		},
+	},
+};
