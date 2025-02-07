@@ -4,44 +4,49 @@ export const files: FileSystemTree = {
 	'server.ts': {
 		file: {
 			contents: `
-      import { Hono } from 'hono';
-      
-      const app = new Hono();
-      
-      app.get('/', (c) => c.text('Welcone to a WebContainers app!'));
-      
-      export default {
-        port: 4000,
-        fetch: app.fetch,
-      };
-      `,
+import { serve } from '@hono/node-server';
+import { Hono } from 'hono';
+import { logger } from 'hono/logger';
+
+const app = new Hono();
+app.use(logger());
+
+app.get('/', (c) => c.text('Welcone to a WebContainers app!'));
+
+serve(app, (info) => {
+	console.log('Server is running on port ', info.port);
+});
+`,
 		},
 	},
 	'package.json': {
 		file: {
-			contents: `
-      {
-  "name": "webcontainers-express-app",
+			contents: `{
+  "name": "webcontainers",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "server:dev": "bun server.ts --watch",
+    "server:dev": "tsx watch server.ts",
     "app:dev": "vite",
-    "dev": "concurrently \"bun server:dev\" \"bun app:dev\"",
     "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^6.1.0",
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.2",
+    "vite": "^6.1.0"
   },
   "dependencies": {
+    "@hono/node-server": "^1.13.8",
     "@oskartdragon/config": "^0.1.3",
+    "@types/fs-extra": "^11.0.4",
     "@webcontainer/api": "^1.5.1-internal.8",
     "eslint": "^9.19.0",
+    "fs-extra": "^11.3.0",
     "hono": "^4.7.0",
-    "prettier": "^3.4.2"
+    "prettier": "^3.4.2",
+    "tiny-invariant": "^1.3.3"
   },
   "prettier": "@oskartdragon/config/prettier"
 }

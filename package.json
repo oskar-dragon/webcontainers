@@ -1,24 +1,25 @@
 {
-  "name": "webcontainers-express-app",
+  "name": "webcontainers",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "server:dev": "bun server.ts --watch",
+    "server:dev": "tsx watch server.ts",
     "app:dev": "vite",
-    "dev": "concurrently \"bun server:dev\" \"bun app:dev\"",
     "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^6.1.0",
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.2",
+    "vite": "^6.1.0"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.8",
     "@oskartdragon/config": "^0.1.3",
     "@types/fs-extra": "^11.0.4",
     "@webcontainer/api": "^1.5.1-internal.8",
+    "@xterm/xterm": "^5.5.0",
     "eslint": "^9.19.0",
     "fs-extra": "^11.3.0",
     "hono": "^4.7.0",

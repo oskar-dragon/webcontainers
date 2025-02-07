@@ -1,11 +1,12 @@
-import fs from 'fs-extra';
+import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
+import { logger } from 'hono/logger';
 
 const app = new Hono();
+app.use(logger());
 
-app.get('/', (c) => c.text('Welcone to a WebContainers app!'));
+app.get('/', (c) => c.text('Welcone to a WebContainers apphaha!'));
 
-export default {
-	port: 3000,
-	fetch: app.fetch,
-};
+serve(app, (info) => {
+	console.log('Server is running on port ', info.port);
+});

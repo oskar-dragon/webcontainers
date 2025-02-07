@@ -1,70 +1,55 @@
 import { WebContainer } from '@webcontainer/api';
+import { Terminal } from '@xterm/xterm';
 import invariant from 'tiny-invariant';
+
+import '@xterm/xterm/css/xterm.css';
 
 import { files } from '../files';
 
 import './style.css';
 
-const app = document.querySelector('#app');
+import { getElement, initWebContainer, installDependencies, startDevServer, writeToServer } from './utils';
 
-if (!app) {
-	throw new Error('No app');
-}
+async function main() {
+	const serverFile = files['server.ts'];
+	const webContainer = await initWebContainer(files);
+	const app = getElement('#app');
 
-app.innerHTML = `
-<div class="container">
-    <div class="editor">
-      <textarea>I am a textarea</textarea>
-    </div>
-    <div class="preview">
-      <iframe src="loading.html"></iframe>
-    </div>
-  </div>
-`;
+	app.innerHTML = `
+	<div class="container">
+			<div class="editor">
+				<textarea>I am a textarea</textarea>
+				<div class="terminal"></div>
+			</div>
+			<div class="preview">
+				<iframe src="loading.html"></iframe>
+			</div>
+		</div>
 
-const iframeEl = document.querySelector('iframe');
-const textareaEl = document.querySelector('textarea');
+	`;
 
-invariant(iframeEl, "iframe doesn't exist");
-invariant(textareaEl, "textarea doesn't exist");
+	const iframeEl = getElement('iframe');
+	const textareaEl = getElement('textarea');
+	const terminalEl = getElement('.terminal');
 
-const serverFile = files['server.ts'];
+	const terminal = new Terminal({
+		convertEol: true,
+	});
+	terminal.open(terminalEl as HTMLElement);
 
-if ('file' in serverFile && 'contents' in serverFile.file) {
+	const dependenciesExitNode = await installDependencies(webContainer, terminal);
+	invariant(dependenciesExitNode === 0, 'Installation failed');
+	await startDevServer(webContainer, terminal);
+	webContainer.on('server-ready', (port, url) => {
+		iframeEl.src = url;
+	});
+
+	invariant('file' in serverFile && 'contents' in serverFile.file, 'NOOO');
 	textareaEl.value = serverFile.file.contents as string;
-}
-
-const webcontainer = await initWebContainer();
-
-const exitCode = await installDependencies();
-invariant(exitCode === 0, 'installation Failed');
-
-async function installDependencies() {
-	// Install dependencies
-	const installProcess = await webcontainer.spawn('pnpm', ['install']);
-
-	installProcess.output.pipeTo(
-		new WritableStream({
-			write(data) {
-				console.log({ data });
-			},
-		}),
-	);
-	// Wait for install command to exit
-	return installProcess.exit;
-}
-
-async function initWebContainer(): Promise<WebContainer> {
-	return new Promise((resolve, reject) => {
-		window.addEventListener('load', async () => {
-			try {
-				const webcontainerInstance = await WebContainer.boot();
-				await webcontainerInstance.mount(files);
-
-				resolve(webcontainerInstance);
-			} catch (error) {
-				reject(error);
-			}
-		});
+	textareaEl.addEventListener('input', (e) => {
+		const target = e.currentTarget as HTMLTextAreaElement;
+		writeToServer(webContainer, target.value);
 	});
 }
+
+main();
