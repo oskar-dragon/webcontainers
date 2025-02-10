@@ -1,4 +1,5 @@
 import { FileSystemTree, WebContainer } from '@webcontainer/api';
+import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import invariant from 'tiny-invariant';
 
@@ -66,4 +67,25 @@ export async function startDevServer(container: WebContainer, terminal: Terminal
 export async function writeToServer(container: WebContainer, content: string) {
 	console.log({ content });
 	await container.fs.writeFile('/server.ts', content);
+}
+
+export async function startShell(container: WebContainer, terminal: Terminal) {
+	const shellProcess = await container.spawn('jsh', {
+		terminal: {
+			cols: terminal.cols,
+			rows: terminal.rows,
+		},
+	});
+	shellProcess.output.pipeTo(
+		new WritableStream({
+			write(data) {
+				terminal.write(data);
+			},
+		}),
+	);
+
+	const input = shellProcess.input.getWriter();
+	terminal.onData((data) => input.write(data));
+
+	return shellProcess;
 }

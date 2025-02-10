@@ -1,6 +1,7 @@
 import { WebContainer } from '@webcontainer/api';
-import { Terminal } from '@xterm/xterm';
 import invariant from 'tiny-invariant';
+
+import { Terminal } from './terminal';
 
 import '@xterm/xterm/css/xterm.css';
 
@@ -8,7 +9,7 @@ import { files } from '../files';
 
 import './style.css';
 
-import { getElement, initWebContainer, installDependencies, startDevServer, writeToServer } from './utils';
+import { getElement, initWebContainer, startShell, writeToServer } from './utils';
 
 async function main() {
 	const serverFile = files['server.ts'];
@@ -25,23 +26,27 @@ async function main() {
 				<iframe src="loading.html"></iframe>
 			</div>
 		</div>
-
 	`;
 
 	const iframeEl = getElement('iframe');
 	const textareaEl = getElement('textarea');
 	const terminalEl = getElement('.terminal');
 
-	const terminal = new Terminal({
-		convertEol: true,
-	});
+	const terminal = new Terminal();
+
 	terminal.open(terminalEl as HTMLElement);
 
-	const dependenciesExitNode = await installDependencies(webContainer, terminal);
-	invariant(dependenciesExitNode === 0, 'Installation failed');
-	await startDevServer(webContainer, terminal);
 	webContainer.on('server-ready', (port, url) => {
 		iframeEl.src = url;
+	});
+
+	const shellProcess = await startShell(webContainer, terminal);
+	window.addEventListener('resize', () => {
+		terminal.fitAddon.fit();
+		shellProcess.resize({
+			cols: terminal.cols,
+			rows: terminal.rows,
+		});
 	});
 
 	invariant('file' in serverFile && 'contents' in serverFile.file, 'NOOO');
